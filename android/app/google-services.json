@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "823884533262",
+    "project_id": "vcookapp",
+    "storage_bucket": "vcookapp.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:823884533262:android:5d86c214fea67148e6b65f",
+        "android_client_info": {
+          "package_name": "com.example.vcook_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDxdMk3_Pq0i1TSjnyQRIo7yEuzXgAA34s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

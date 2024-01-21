@@ -1,23 +1,70 @@
 import 'package:flutter/material.dart';
-import 'package:vcook_app/constants.dart';
-import 'package:vcook_app/data.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:vcook_app/detail.dart';
-import 'package:vcook_app/shared.dart';
-import 'package:vcook_app/user.dart';
 import 'package:vcook_app/drawerside.dart';
+import 'package:vcook_app/user.dart';
+
 
 class Recieps extends StatefulWidget {
-
   @override
   _ReciepsState createState() => _ReciepsState();
-
-
 }
 
 class _ReciepsState extends State<Recieps> {
+  List<bool> optionSelected = [];
+  List<String> categories = [];
+  List<Ingredient> ingredients = [];
+  List<Ingredient> displayedIngredients = [];
 
-  List<bool> optionSelected = [true, false, false];
+  @override
+  void initState() {
+    super.initState();
+    fetchCategoriesAndIngredients();
+  }
 
+  void fetchCategoriesAndIngredients() async {
+    var categoryCollection = FirebaseFirestore.instance.collection('categoriesfood');
+    var querySnapshotCategory = await categoryCollection.get();
+    Map<String, String> categoriesMap = {};
+    for (var category in querySnapshotCategory.docs) {
+      categoriesMap[category.id] = category['name'];
+    }
+
+    var foodCollection = FirebaseFirestore.instance.collection('food');
+    var querySnapshotFood = await foodCollection.get();
+    List<Ingredient> tempIngredients = [];
+    for (var food in querySnapshotFood.docs) {
+      String categoryName = categoriesMap[food['category']] ?? 'Unknown';
+      tempIngredients.add(Ingredient(
+        id: food['id'],
+        name: food['name'],
+        imagePath: 'assets/images/${food['image']}',
+        category: categoryName,
+      ));
+    }
+
+    setState(() {
+      categories = categoriesMap.values.toList();
+      ingredients = tempIngredients;
+      displayedIngredients = List.from(ingredients);
+      optionSelected = List.generate(categories.length, (index) => false);
+    });
+  }
+
+  void filterIngredientsByCategory(String categoryName) {
+    var filteredIngredients = ingredients.where((ingredient) => ingredient.category == categoryName).toList();
+
+    setState(() {
+      displayedIngredients = filteredIngredients;
+    });
+  }
+
+
+  void resetFilters() {
+    setState(() {
+      displayedIngredients = List.from(ingredients);
+    });
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -34,11 +81,11 @@ class _ReciepsState extends State<Recieps> {
               onTap: () {
                 Navigator.push(context, MaterialPageRoute(builder: (context) => User()));
               },
-            child: Icon(
-              Icons.person,
-              color: Colors.black,
+              child: Icon(
+                Icons.person,
+                color: Colors.black,
+              ),
             ),
-           ),
           ),
         ],
       ),
@@ -46,277 +93,145 @@ class _ReciepsState extends State<Recieps> {
         physics: BouncingScrollPhysics(),
         child: Column(
           children: [
-
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
-                  buildTextTitleVariation1('Yemek Tarifleri'),
-
-                  buildTextSubTitleVariation1('Mutfağınız, Mobil Mutfak ile Avcunuzun İçinde '),
-                  buildTextSubTitleVariation1('Lezzetler Hep Sizinle'),
-
-                  SizedBox(
-                    height: 32,
+                  Text(
+                    'Yemek Tarifleri',
+                    style: TextStyle(
+                      fontSize: 30,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-
-                      option('Et Yemekleri', 'assets/icons/salad.png', 0),
-                      SizedBox(
-                        width: 8,
+                  Text(
+                    'Mutfağınız, Mobil Mutfak ile Avcunuzun İçinde',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.black,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  Text(
+                    'Lezzetler Hep Sizinle',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.black,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 32),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: List.generate(
+                        categories.length,
+                            (index) => option(categories[index], index),
                       ),
-                      option('Makarna', 'assets/icons/rice.png', 1),
-                      SizedBox(
-                        width: 8,
-                      ),
-                      option('Pr', 'assets/icons/fruit.png', 2),
-                    ],
+                    ),
                   ),
                 ],
               ),
             ),
-
-            SizedBox(
-              height: 24,
-            ),
-
-            Container(
-              height: 300,
-              child: ListView(
-                physics: BouncingScrollPhysics(),
-                scrollDirection: Axis.horizontal,
-                children: buildRecipes(),
+            SizedBox(height: 24),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 0.8,
               ),
+              itemCount: displayedIngredients.length,
+              itemBuilder: (context, index) {
+                print(displayedIngredients);
+                return buildIngredient(displayedIngredients[index], index);
+              },
             ),
-
-
-            SizedBox(
-              height: 16,
-            ),
-
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-
-                  buildTextTitleVariation2('Popüler', false),
-
-                  SizedBox(
-                    width: 8,
-                  ),
-
-                  buildTextTitleVariation2('Yemekler', true),
-
-                ],
-              ),
-            ),
-
-            Container(
-              height: 190,
-              child: PageView(
-                physics: BouncingScrollPhysics(),
-                children: buildPopulars(),
-              ),
-            ),
-
           ],
         ),
-
       ),
     );
   }
 
-
-  Widget option(String text, String image, int index){
+  Widget option(String categoryName, int index) {
     return GestureDetector(
       onTap: () {
-        setState(() {
-          optionSelected[index] = !optionSelected[index];
-        });
+        if (optionSelected[index]) {
+          resetFilters();
+          optionSelected[index] = false;
+        } else {
+          for (int i = 0; i < optionSelected.length; i++) {
+            optionSelected[i] = false;
+          }
+          optionSelected[index] = true;
+          filterIngredientsByCategory(categoryName);
+        }
+
+        setState(() {});
       },
       child: Container(
         height: 40,
         decoration: BoxDecoration(
-          color: optionSelected[index] ? kPrimaryColor : Colors.white,
-          borderRadius: BorderRadius.all(
-            Radius.circular(20),
-          ),
-          boxShadow: [kBoxShadow],
+          color: optionSelected[index] ? Colors.green : Colors.grey,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 5, spreadRadius: 1)],
         ),
-        padding: EdgeInsets.symmetric(horizontal: 12),
-        child: Row(
-          children: [
-
-            SizedBox(
-              height: 32,
-              width: 32,
-              child: Image.asset(
-                image,
-                color: optionSelected[index] ? Colors.white : Colors.black,
-              ),
-            ),
-
-            SizedBox(
-              width: 8,
-            ),
-
-            Text(
-              text,
-              style: TextStyle(
-                color: optionSelected[index] ? Colors.white : Colors.black,
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
+        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        margin: EdgeInsets.symmetric(horizontal: 4),
+        child: Text(
+          categoryName,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
     );
   }
 
-  List<Widget> buildRecipes(){
-    List<Widget> list = [];
-    for (var i = 0; i < getIngredients().length; i++) {
-      list.add(buildRecipe(getIngredients()[i], i));
-    }
-    return list;
-  }
-
-
-  Widget buildRecipe(Ingredient recipe, int index){
-    return GestureDetector(
+  Widget buildIngredient(Ingredient ingredient, int index) {
+    print(ingredient.id);
+    return InkWell(
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => Detail(ingredient: recipe)),
+          MaterialPageRoute(
+
+            builder: (context) => DetailPage(index: ingredient.id),
+          ),
         );
       },
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.all(
-            Radius.circular(20),
-          ),
-          boxShadow: [kBoxShadow],
-        ),
-        margin: EdgeInsets.only(right: 8, left: index == 0 ? 8 : 0, bottom: 30, top: 8),
-        padding: EdgeInsets.all(15),
-        width: 193,
+      child: Card(
+        margin: EdgeInsets.all(8),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-
+          children: [
             Expanded(
-              child: Hero(
-                tag: recipe.image,
-                child: Container(
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage(recipe.image),
-                      fit: BoxFit.contain,
+              child: Image.asset(ingredient.imagePath, fit: BoxFit.cover),
+            ),
+            Padding(
+              padding: EdgeInsets.all(8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    ingredient.name,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                ),
+                  Icon(Icons.favorite_border, color: Colors.red),
+                ],
               ),
             ),
-
-            SizedBox(
-              height: 8,
-            ),
-
-            buildRecipeTitle(recipe.title),
-
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-
-                buildCalories(recipe.calories.toString() + " Kcal"),
-
-                Icon(
-                   Icons.favorite_border,
-                )
-
-              ],
-            ),
-
           ],
         ),
       ),
     );
   }
-
-  List<Widget> buildPopulars(){
-    List<Widget> list = [];
-    for (var i = 0; i < getIngredients().length; i++) {
-      list.add(buildPopular(getIngredients()[i]));
-    }
-    return list;
-  }
-
-  Widget buildPopular(Ingredient recipe){
-    return Container(
-      margin: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.all(
-          Radius.circular(20),
-        ),
-        boxShadow: [kBoxShadow],
-      ),
-      child: Row(
-        children: [
-
-          Container(
-            height: 160,
-            width: 160,
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage(recipe.image),
-                fit: BoxFit.fitHeight,
-              ),
-            ),
-          ),
-
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-
-                  buildRecipeTitle(recipe.title),
-
-
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-
-                      buildCalories(recipe.calories.toString() + " Kcal"),
-
-                      Icon(
-                        Icons.favorite_border,
-                      )
-
-                    ],
-                  ),
-
-                ],
-              ),
-
-            ),
-          ),
-
-        ],
-      ),
-    );
-  }
-
 }
 

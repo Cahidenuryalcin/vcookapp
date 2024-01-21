@@ -3,10 +3,8 @@ import 'package:vcook_app/service/auth.dart';
 
 class LoginPage extends StatelessWidget {
   @override
-
   final _tEmail = TextEditingController();
   final _tPassword = TextEditingController();
-
 
   Widget build(BuildContext context) {
     return Scaffold(
@@ -50,7 +48,7 @@ class LoginPage extends StatelessWidget {
                     child: Column(
                       children: <Widget>[
                         makeInput(label: "Email", controller: _tEmail),
-                        makeInput(label: "Şifre", controller: _tPassword),
+                        makeInput(label: "Şifre", controller: _tPassword, obscureText: true), // Şifre alanı için güncelleme
                       ],
                     ),
                   ),
@@ -68,13 +66,11 @@ class LoginPage extends StatelessWidget {
                           )
                       ),
                       child: MaterialButton(
-
                         minWidth: double.infinity,
                         height: 60,
-                          onPressed: () {
-                            Auth().signIn(context, email: _tEmail.text, password: _tPassword.text);
-
-                          },
+                        onPressed: () {
+                          Auth().signIn(context, email: _tEmail.text, password: _tPassword.text);
+                        },
                         color: Colors.greenAccent,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
@@ -83,7 +79,6 @@ class LoginPage extends StatelessWidget {
                         child: Text("Giriş Yap", style: TextStyle(
                             fontWeight: FontWeight.w600,
                             fontSize: 18
-
                         ),),
                       ),
                     ),
@@ -115,7 +110,7 @@ class LoginPage extends StatelessWidget {
     );
   }
 
-  Widget makeInput({required TextEditingController controller,label, obscureText = false}) {
+  Widget makeInput({required TextEditingController controller, required String label, bool obscureText = false}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
@@ -124,22 +119,25 @@ class LoginPage extends StatelessWidget {
             fontWeight: FontWeight.w400,
             color: Colors.black87
         ),),
-        SizedBox(height: 5,),
+        SizedBox(height: 8,),
         TextField(
           controller: controller,
           obscureText: obscureText,
           decoration: InputDecoration(
             contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 10),
-            enabledBorder: OutlineInputBorder(
-
-            ),
-            border: OutlineInputBorder(
-
-            ),
+            enabledBorder: OutlineInputBorder(),
+            border: OutlineInputBorder(),
+            suffixIcon: controller.text.isNotEmpty
+                ? IconButton(
+              icon: Icon(Icons.clear),
+              onPressed: () => controller.clear(),
+            )
+                : null,
           ),
         ),
         SizedBox(height: 10,),
       ],
     );
   }
+
 }

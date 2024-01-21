@@ -22,6 +22,7 @@ class DrawerSide extends StatelessWidget {
   }
 
   @override
+
   Widget build(BuildContext context) {
     return Drawer(
       child: Container(
@@ -104,11 +105,7 @@ class DrawerSide extends StatelessWidget {
                 icon: Icons.keyboard_backspace_outlined,
                 title: "Çıkış Yap",
                 onTap: (){
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => User(),
-                  ),
-                );
+                //tıklanıldığında çıkış yapılacak ve homepage() sayfasına yönlendirilecek
               },
             ),
           ],

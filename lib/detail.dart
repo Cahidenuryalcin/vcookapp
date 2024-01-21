@@ -1,235 +1,165 @@
 import 'package:flutter/material.dart';
-import 'package:vcook_app/constants.dart';
-import 'package:vcook_app/shared.dart';
-import 'package:vcook_app/data.dart';
+import 'package:vcook_app/camera.dart';
+import 'package:vcook_app/imagepicker.dart';
+import 'package:vcook_app/recieps.dart';
+import 'package:vcook_app/drawerside.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:vcook_app/service/food.dart'; // Burada 'path/to' kısmını uygun yola güncelleyin
 
-class Detail extends StatelessWidget {
+class DetailPage extends StatefulWidget {
+  final int index;
 
-  final Ingredient ingredient;
+  DetailPage({required this.index});
 
-  Detail({required this.ingredient});
+  @override
+  _DetailPageState createState() => _DetailPageState();
+}
+class _DetailPageState extends State<DetailPage> {
+  late DocumentSnapshot foodSnapshot;
+  bool _isFoodSnapshotLoaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchFoodDetails();
+  }
+
+  void fetchFoodDetails() async {
+    var foodCollection = FirebaseFirestore.instance.collection('food');
+    var querySnapshotFood =
+    await foodCollection.where('id', isEqualTo: widget.index).get();
+    if (querySnapshotFood.docs.isNotEmpty) {
+      setState(() {
+        foodSnapshot = querySnapshotFood.docs.first;
+        _isFoodSnapshotLoaded = true;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: GestureDetector(
-          onTap: () {
-            Navigator.pop(context);
-          },
-          child: Icon(
-            Icons.arrow_back_ios,
-            color: Colors.black,
-          ),
+    if (!_isFoodSnapshotLoaded) {
+      return Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
         ),
-        actions: [
-          Padding(
-            padding: EdgeInsets.only(right: 16),
-            child: Icon(
-              Icons.favorite_border,
-              color: Colors.black,
-            ),
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        physics: BouncingScrollPhysics(),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+      );
+    }
 
+    String name = foodSnapshot['name'];
+    String imagePath = 'assets/images/${foodSnapshot['image']}';
+    String calorie = foodSnapshot['calorie'];
+    String time = foodSnapshot['time'];
+    String serving = foodSnapshot['service'];
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(name),
+        iconTheme: IconThemeData(color: Colors.black),
+      ),
+      drawer: DrawerSide(),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    name,
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                Expanded(
+                  child: Image.asset(
+                    imagePath,
+                    width: MediaQuery.of(context).size.width / 2,
+                  ),
+                ),
+              ],
+            ),
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
+              padding: EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
-                  buildTextTitleVariation1(ingredient.title),
-
-
-                ],
-              ),
-            ),
-
-            SizedBox(
-              height: 16,
-            ),
-
-            Container(
-              height: 310,
-              padding: EdgeInsets.only(left: 16),
-              child: Stack(
-                children: [
-
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-
-                      buildTextTitleVariation2('Besin Değerleri', false),
-
-                      SizedBox(
-                        height: 16,
-                      ),
-
-                      buildNutrition(ingredient.calories, "Kalori", "Kcal"),
-
-                      SizedBox(
-                        height: 16,
-                      ),
-
-                      buildNutrition(ingredient.carbo, "Süre", "Dakika"),
-
-                      SizedBox(
-                        height: 16,
-                      ),
-
-                      buildNutrition(ingredient.protein, "Servis", "Kişi"),
-
+                      _buildInfoCard('Kalori', '$calorie kcal'),
+                      _buildInfoCard('Süre', '$time dk'),
+                      _buildInfoCard('Servis', '$serving Kişilik'),
                     ],
                   ),
-
-                  Positioned(
-                    right: -80,
-                    child: Hero(
-                      tag: ingredient.image,
-                      child: Container(
-                        height: 310,
-                        width: 310,
-                        decoration: BoxDecoration(
-                          image: DecorationImage(
-                            image: AssetImage(ingredient.image),
-                            fit: BoxFit.fitHeight,
-                          ),
-                        ),
-                      ),
+                  SizedBox(height: 16),
+                  Text(
+                    "Tarif",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  Text(foodSnapshot['reciep']),
+                  SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => CameraOn()),
+                      );
+                    },
+                    icon: Icon(Icons.photo_camera),
+                    label: Text("Ben de Yaptım", style: TextStyle(fontSize: 16)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      minimumSize: Size(double.infinity, 50),
                     ),
                   ),
-
+                  SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => ImagePickerPage()),
+                      );
+                    },
+                    icon: Icon(Icons.photo_camera),
+                    label: Text("Fotoğraf Yükle", style: TextStyle(fontSize: 16)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      minimumSize: Size(double.infinity, 50),
+                    ),
+                  ),
                 ],
               ),
             ),
-
-            Padding(
-              padding: EdgeInsets.only(left: 16, right: 16, bottom: 80),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-
-                  buildTextTitleVariation2('Malzemeler', false),
-
-                  buildTextSubTitleVariation1("500gr Tavuk Bonfile"),
-                  buildTextSubTitleVariation1("10gr Yoğurt"),
-                  buildTextSubTitleVariation1("2gr Karabiber"),
-                  buildTextSubTitleVariation1("2gr Tuz"),
-                  buildTextSubTitleVariation1("10gr Yağ"),
-                  buildTextSubTitleVariation1("5gr Bal"),
-
-                  SizedBox(height: 16,),
-
-                  buildTextTitleVariation2('Tarif', false),
-
-                  buildTextSubTitleVariation1("Tavuğu iki eş parçaya böl, bir çalat yardımıyla ez, tüm malzemeleri tavukla buluştur. 1 saat buzdolabında dinlendir."),
-                  buildTextSubTitleVariation1("Dinlenmiş tavuğu tavaya yağ ekleyerek pişir, yaklaşık yarım saat kısık ateşte pişmiş tavuğa bal ekle ve ocağın altını kapat"),
-                  buildTextSubTitleVariation1("15 dakika dinlendirilmiş yemeği servis edebilirsin. Afiyet olsun!"),
-
-                ],
-              ),
-            ),
-
           ],
         ),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: FloatingActionButton.extended(
-          onPressed: () {},
-          backgroundColor: kPrimaryColor,
-          icon: Icon(
-            Icons.image,
-            color: Colors.white,
-            size: 32,
-          ),
-          label: Text(
-            "Yemeği Yükle",
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          )
-      ),
     );
   }
 
-  Widget buildNutrition(int value, String title, String subTitle){
-    return Container(
-      height: 60,
-      width: 150,
-      padding: EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.all(
-          Radius.circular(50),
+  Widget _buildInfoCard(String title, String value) {
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      child: Padding(
+        padding: EdgeInsets.all(8.0),
+        child: Column(
+          children: [
+            Text(title),
+            SizedBox(height: 4),
+            Text(value, style: TextStyle(fontWeight: FontWeight.bold)),
+          ],
         ),
-        boxShadow: [kBoxShadow],
-      ),
-      child: Row(
-        children: [
-
-          Container(
-            height: 44,
-            width: 44,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-              boxShadow: [kBoxShadow],
-            ),
-            child: Center(
-              child: Text(
-                value.toString(),
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-
-          SizedBox(
-            width: 20,
-          ),
-
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-
-              Text(
-                subTitle,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey[400],
-                ),
-              ),
-
-            ],
-          ),
-
-        ],
       ),
     );
   }
+}
+
+class Ingredient {
+  int id;
+  String name;
+  String imagePath;
+  String category;
+
+
+  Ingredient({required this.name, required this.imagePath, required this.category, required this.id});
 
 }

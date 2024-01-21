@@ -1,10 +1,10 @@
+import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:vcook_app/service/auth.dart';
 
 class SignupPage extends StatelessWidget {
   @override
-
-
   final _tName = TextEditingController();
   final _tEmail = TextEditingController();
   final _tPassword = TextEditingController();
@@ -15,7 +15,6 @@ class SignupPage extends StatelessWidget {
       backgroundColor: Colors.white,
       appBar: AppBar(
         elevation: 0,
-
         backgroundColor: Colors.white,
         leading: IconButton(
           onPressed: () {
@@ -47,9 +46,9 @@ class SignupPage extends StatelessWidget {
               ),
               Column(
                 children: <Widget>[
-                  makeInput(label: "İsim", controller: _tName),
-                  makeInput(label: "Email", controller: _tEmail),
-                  makeInput(label: "Şifre", controller: _tPassword),
+                  makeInput(label: "İsim", controller: _tName, obscureText: false),
+                  makeInput(label: "Email", controller: _tEmail, obscureText: false),
+                  makeInput(label: "Şifre", controller: _tPassword, obscureText: true),
                 ],
               ),
               Container(
@@ -67,8 +66,11 @@ class SignupPage extends StatelessWidget {
                   minWidth: double.infinity,
                   height: 60,
                   onPressed: () {
-                  Auth().signUp(context, name: _tName.text, email: _tEmail.text, password: _tPassword.text);
-
+                    if (EmailValidator.validate(_tEmail.text)) {
+                      Auth().signUp(context, name: _tName.text, email: _tEmail.text, password: _tPassword.text);
+                    } else {
+                      Fluttertoast.showToast(msg: "Geçersiz email adresi", toastLength: Toast.LENGTH_LONG);
+                    }
                   },
                   color: Colors.greenAccent,
                   elevation: 0,
@@ -76,11 +78,10 @@ class SignupPage extends StatelessWidget {
                       borderRadius: BorderRadius.circular(50)
                   ),
                   child: Text("Kayıt Ol",
-                      style: TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.w600,
                       fontSize: 18,
-
-                  ),),
+                    ),),
                 ),
               ),
               Row(
@@ -99,7 +100,7 @@ class SignupPage extends StatelessWidget {
     );
   }
 
-  Widget makeInput({required TextEditingController controller, label, obscureText = false}) {
+  Widget makeInput({required TextEditingController controller, required String label, bool obscureText = false}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
@@ -114,16 +115,19 @@ class SignupPage extends StatelessWidget {
           obscureText: obscureText,
           decoration: InputDecoration(
             contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 10),
-            enabledBorder: OutlineInputBorder(
-
-            ),
-            border: OutlineInputBorder(
-
-            ),
+            enabledBorder: OutlineInputBorder(),
+            border: OutlineInputBorder(),
+            suffixIcon: controller.text.isNotEmpty
+                ? IconButton(
+              icon: Icon(Icons.clear),
+              onPressed: () => controller.clear(),
+            )
+                : null,
           ),
         ),
         SizedBox(height: 10,),
       ],
     );
   }
+
 }

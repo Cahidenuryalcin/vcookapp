@@ -1,25 +1,36 @@
 import 'package:flutter/material.dart';
-import 'package:vcook_app/constants.dart';
-import 'package:vcook_app/data.dart';
-import 'package:vcook_app/shared.dart';
 import 'package:vcook_app/user.dart';
 import 'package:vcook_app/drawerside.dart';
 
-
 class Kitchen extends StatefulWidget {
   @override
-  _KitchenState createState() =>_KitchenState();
+  _KitchenState createState() => _KitchenState();
 }
 
 class _KitchenState extends State<Kitchen> {
+  List<bool> optionSelected = [true, false, false, false];
 
-  List<bool> optionSelected = [true, false, false];
+  // Kategori bilgileri
+  final List<String> categories = ["İçecekler", "Bakliyatlar", "Unlu Mamüller", "Süt Ürünleri"];
+
+  // Malzeme bilgileri
+  final List<Ingredient> ingredients = [
+    Ingredient(name: "Ekmek", quantity: 2),
+    Ingredient(name: "Yumurta", quantity: 12),
+    Ingredient(name: "Su", quantity: 5),
+    Ingredient(name: "Nohut", quantity: 1),
+    Ingredient(name: "Nohut", quantity: 1),
+    Ingredient(name: "Nohut", quantity: 1),
+    Ingredient(name: "Nohut", quantity: 1),
+    Ingredient(name: "Nohut", quantity: 1),
+
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: DrawerSide(),
       backgroundColor: Colors.grey[50],
+      drawer: DrawerSide(),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -39,175 +50,177 @@ class _KitchenState extends State<Kitchen> {
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // Yeni malzeme ekleme işlevi
+        },
+        child: Icon(Icons.add),
+      ),
       body: SingleChildScrollView(
         physics: BouncingScrollPhysics(),
         child: Column(
           children: [
-
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
-                  buildTextTitleVariation1('Mobil Mutfağım'),
-
-                  buildTextSubTitleVariation1('Mutfağınız, Mobil Mutfak ile Avcunuzun İçinde '),
-                  buildTextSubTitleVariation1('Lezzetler Hep Sizinle'),
-
-                  SizedBox(
-                    height: 32,
+                  Text(
+                    'Sanal Mutfağım',
+                    style: TextStyle(
+                      fontSize: 30, // Font boyutunu ayarlayın
+                      fontWeight: FontWeight.bold, // Yazı tipi kalınlığını ayarlayın
+                      color: Colors.black, // Yazı rengini ayarlayabilirsiniz
+                    ),
+                    textAlign: TextAlign.center, // Metni ortalamak için
                   ),
 
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
+                  Text(
+                    'Mutfağınız, Mobil Mutfak ile Avcunuzun İçinde',
+                    style: TextStyle(
+                      fontSize: 16, // Font boyutunu ayarlayın
+                      color: Colors.black, // Yazı rengini ayarlayabilirsiniz
+                    ),
+                    textAlign: TextAlign.center, // Metni ortalamak için
+                  ),
 
-                      option('Sebze', 'assets/icons/salad.png', 0),
-                      SizedBox(
-                        width: 8,
+                  Text(
+                    'Lezzetler Hep Sizinle',
+                    style: TextStyle(
+                      fontSize: 16, // Font boyutunu ayarlayın
+                      color: Colors.black, // Yazı rengini ayarlayabilirsiniz
+                    ),
+                    textAlign: TextAlign.center, // Metni ortalamak için
+                  ),
+                  SizedBox(height: 32),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: List.generate(
+                        categories.length,
+                            (index) => option(categories[index], index),
                       ),
-                      option('Bakliyat', 'assets/icons/rice.png', 1),
-                      SizedBox(
-                        width: 8,
-                      ),
-                      option('Meyve', 'assets/icons/fruit.png', 2),
-                    ],
+                    ),
                   ),
                 ],
               ),
             ),
-
-            SizedBox(
-              height: 24,
-            ),
-
-            Container(
-              height: 300,
-              child: ListView(
-                physics: BouncingScrollPhysics(),
-                scrollDirection: Axis.horizontal,
-                children: buildIngredients(),
+            SizedBox(height: 24),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 0.8,
               ),
+              itemCount: ingredients.length,
+              itemBuilder: (context, index) {
+                return buildIngredient(ingredients[index], index);
+              },
             ),
-
-
-            SizedBox(
-              height: 16,
-            ),
-
           ],
         ),
       ),
     );
   }
 
-  Widget option(String text, String image, int index){
+  Widget option(String text, int index) {
     return GestureDetector(
       onTap: () {
         setState(() {
-          optionSelected[index] = !optionSelected[index];
+          for (int i = 0; i < optionSelected.length; i++) {
+            optionSelected[i] = i == index;
+          }
         });
       },
       child: Container(
         height: 40,
         decoration: BoxDecoration(
-          color: optionSelected[index] ? kPrimaryColor : Colors.white,
-          borderRadius: BorderRadius.all(
-            Radius.circular(20),
-          ),
-          boxShadow: [kBoxShadow],
+          color: optionSelected[index] ? Colors.green : Colors.grey,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 5, spreadRadius: 1)],
         ),
-        padding: EdgeInsets.symmetric(horizontal: 12),
-        child: Row(
-          children: [
-
-            SizedBox(
-              height: 32,
-              width: 32,
-              child: Image.asset(
-                image,
-                color: optionSelected[index] ? Colors.white : Colors.black,
-              ),
-            ),
-
-            SizedBox(
-              width: 8,
-            ),
-
-            Text(
-              text,
-              style: TextStyle(
-                color: optionSelected[index] ? Colors.white : Colors.black,
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
+        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        margin: EdgeInsets.symmetric(horizontal: 4),
+        child: Text(
+          text,
+          style: TextStyle(
+            color: optionSelected[index] ? Colors.white : Colors.white,
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
     );
   }
 
-  List<Widget> buildIngredients(){
-    List<Widget> list = [];
-    for (var i = 0; i < getIngredients().length; i++) {
-      list.add(buildIngredient(getIngredients()[i], i));
-    }
-    return list;
-  }
-
-
-  Widget buildIngredient(Ingredient ingredient, int index){
-    return GestureDetector(
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.all(
-            Radius.circular(20),
+  Widget buildIngredient(Ingredient ingredient, int index) {
+    return Card(
+      margin: EdgeInsets.all(8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: Center(child: Text(ingredient.name)),
           ),
-          boxShadow: [kBoxShadow],
-        ),
-        margin: EdgeInsets.only(right: 8, left: index == 0 ? 8 : 0, bottom: 100, top: 8),
-        padding: EdgeInsets.all(15),
-        width: 193,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-
-
-            SizedBox(
-              height: 8,
-            ),
-
-            buildRecipeTitle(ingredient.title),
-
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-
-                buildCalories(ingredient.calories.toString() + " Gr"),
-
-              ],
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Icon(
-                  Icons.add,
-                )
-
-              ],
-            ),
-
-          ],
-        ),
+          Text("${ingredient.quantity} Gram"),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              IconButton(
+                icon: Icon(Icons.delete),
+                onPressed: () {
+                  // Silme işlemi
+                },
+              ),
+              IconButton(
+                icon: Icon(Icons.edit),
+                onPressed: () {
+                  // Düzenleme işlemi
+                  _showEditDialog(ingredient, context);
+                },
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 
+  void _showEditDialog(Ingredient ingredient, BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Miktar Düzenle'),
+          content: TextField(
+            controller: TextEditingController()..text = ingredient.quantity.toString(),
+            decoration: InputDecoration(hintText: "Yeni miktar girin"),
+            keyboardType: TextInputType.number,
+          ),
+          actions: <Widget>[
+            MaterialButton(
+              child: Text('İptal'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            MaterialButton(
+              child: Text('Kaydet'),
+              onPressed: () {
+                // Kaydetme işlemi
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
 
+class Ingredient {
+  String name;
+  int quantity;
 
-
+  Ingredient({required this.name, required this.quantity});
 }

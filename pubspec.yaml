@@ -40,6 +40,16 @@ dependencies:
   cloud_firestore: ^4.13.3
   firebase_core: ^2.24.0
   fluttertoast: ^8.0.8
+  email_validator: ^2.0.1
+  get: ^4.6.6
+  camera: ^0.10.5+9
+  permission_handler: ^11.2.0
+  image: ^3.3.0
+  flutter_tflite: ^1.0.1
+  image_picker: ^0.8.9
+
+
+
 
 dev_dependencies:
   flutter_test:
@@ -69,6 +79,8 @@ flutter:
     - assets/illustration.png
     - assets/images/
     - assets/icons/
+    - assets/model.tflite
+    - assets/labels.txt
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

@@ -9,9 +9,6 @@ class Auth {
   final userCollection = FirebaseFirestore.instance.collection("users");
   final firebaseAuth = FirebaseAuth.instance;
 
-
-
-
   Future<void> signUp(BuildContext context, {required String name, required String email, required String password}) async {
     try {
       final UserCredential userCredential = await firebaseAuth.createUserWithEmailAndPassword(email: email, password: password);

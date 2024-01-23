@@ -1,4 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:flutter_pytorch/flutter_pytorch.dart';
+import 'package:vcook_app/service/food.dart';
 import 'package:vcook_app/user.dart';
 import 'package:vcook_app/drawerside.dart';
 
@@ -8,24 +12,32 @@ class Kitchen extends StatefulWidget {
 }
 
 class _KitchenState extends State<Kitchen> {
-  List<bool> optionSelected = [true, false, false, false];
+  List<bool> optionSelected = [];
+  List<CategoriesIngredients> categories = [];
 
-  // Kategori bilgileri
-  final List<String> categories = ["İçecekler", "Bakliyatlar", "Unlu Mamüller", "Süt Ürünleri"];
+  @override
+  void initState() {
+    super.initState();
+    fetchCategories();
+  }
 
-  // Malzeme bilgileri
-  final List<Ingredient> ingredients = [
-    Ingredient(name: "Ekmek", quantity: 2),
-    Ingredient(name: "Yumurta", quantity: 12),
-    Ingredient(name: "Su", quantity: 5),
-    Ingredient(name: "Nohut", quantity: 1),
-    Ingredient(name: "Nohut", quantity: 1),
-    Ingredient(name: "Nohut", quantity: 1),
-    Ingredient(name: "Nohut", quantity: 1),
-    Ingredient(name: "Nohut", quantity: 1),
+  void fetchCategories() async {
+    var ingredientsCategoryCollection = FirebaseFirestore.instance.collection('categoriesingredients');
+    try {
+      var querySnapshotCategory = await ingredientsCategoryCollection.get();
+      var fetchedCategories = querySnapshotCategory.docs.map((item) => CategoriesIngredients(
+        id: item.data()['id'],
+        name: item.data()['name'],
+      )).toList();
 
-  ];
-
+      setState(() {
+        categories = fetchedCategories;
+        optionSelected = List.generate(categories.length, (index) => false);
+      });
+    } catch (e) {
+      print('Error fetching categories: $e');
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -113,9 +125,9 @@ class _KitchenState extends State<Kitchen> {
                 crossAxisCount: 2,
                 childAspectRatio: 0.8,
               ),
-              itemCount: ingredients.length,
+              itemCount: categories.length,
               itemBuilder: (context, index) {
-                return buildIngredient(ingredients[index], index);
+               // return buildIngredient(Ingredient[index], index);
               },
             ),
           ],
@@ -123,14 +135,14 @@ class _KitchenState extends State<Kitchen> {
       ),
     );
   }
-
-  Widget option(String text, int index) {
+  Widget option(CategoriesIngredients category, int index) { // Update parameter type
     return GestureDetector(
       onTap: () {
         setState(() {
           for (int i = 0; i < optionSelected.length; i++) {
             optionSelected[i] = i == index;
           }
+          // TODO: You may want to filter ingredients based on the selected category
         });
       },
       child: Container(
@@ -143,9 +155,9 @@ class _KitchenState extends State<Kitchen> {
         padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         margin: EdgeInsets.symmetric(horizontal: 4),
         child: Text(
-          text,
+          category.name,
           style: TextStyle(
-            color: optionSelected[index] ? Colors.white : Colors.white,
+            color: Colors.white,
             fontSize: 14,
             fontWeight: FontWeight.bold,
           ),

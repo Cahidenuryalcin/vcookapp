@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:vcook_app/detail.dart';
 import 'package:vcook_app/drawerside.dart';
 import 'package:vcook_app/user.dart';
+import 'package:vcook_app/service/food.dart';
 
 
 class Recieps extends StatefulWidget {
@@ -12,9 +13,10 @@ class Recieps extends StatefulWidget {
 
 class _ReciepsState extends State<Recieps> {
   List<bool> optionSelected = [];
-  List<String> categories = [];
-  List<Ingredient> ingredients = [];
-  List<Ingredient> displayedIngredients = [];
+  List<CategoriesFood> categoriesfood = [];
+  List<IngredientRecieps> ingredients = [];
+  List<IngredientRecieps> displayedIngredients = [];
+  List<CategoriesFood> displayedCategories = [];
 
   @override
   void initState() {
@@ -25,34 +27,41 @@ class _ReciepsState extends State<Recieps> {
   void fetchCategoriesAndIngredients() async {
     var categoryCollection = FirebaseFirestore.instance.collection('categoriesfood');
     var querySnapshotCategory = await categoryCollection.get();
-    Map<String, String> categoriesMap = {};
+    List<CategoriesFood> tempCategories = [];
     for (var category in querySnapshotCategory.docs) {
-      categoriesMap[category.id] = category['name'];
+      tempCategories.add(CategoriesFood(
+        id: category['id'],
+        name: category['name'],
+      ));
+
     }
 
     var foodCollection = FirebaseFirestore.instance.collection('food');
     var querySnapshotFood = await foodCollection.get();
-    List<Ingredient> tempIngredients = [];
+    List<IngredientRecieps> tempIngredients = [];
     for (var food in querySnapshotFood.docs) {
-      String categoryName = categoriesMap[food['category']] ?? 'Unknown';
-      tempIngredients.add(Ingredient(
+     //String categoryName = categoriesMap[food['category']] ?? 'Unknown';
+      tempIngredients.add(IngredientRecieps(
         id: food['id'],
         name: food['name'],
         imagePath: 'assets/images/${food['image']}',
-        category: categoryName,
+        category: 'categoryName',
+        categoryId: food['categoryId'],
       ));
     }
 
     setState(() {
-      categories = categoriesMap.values.toList();
+      categoriesfood = tempCategories;
       ingredients = tempIngredients;
       displayedIngredients = List.from(ingredients);
-      optionSelected = List.generate(categories.length, (index) => false);
+      displayedCategories = List.from(categoriesfood);
+      optionSelected = List.generate(categoriesfood.length, (index) => false);
     });
   }
 
-  void filterIngredientsByCategory(String categoryName) {
-    var filteredIngredients = ingredients.where((ingredient) => ingredient.category == categoryName).toList();
+  void filterIngredientsByCategory(categoryId) {
+print(categoryId);
+    var filteredIngredients = ingredients.where((ingredient) => ingredient.categoryId == categoryId).toList();
 
     setState(() {
       displayedIngredients = filteredIngredients;
@@ -63,8 +72,10 @@ class _ReciepsState extends State<Recieps> {
   void resetFilters() {
     setState(() {
       displayedIngredients = List.from(ingredients);
+      optionSelected = List.generate(categoriesfood.length, (index) => false);
     });
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -128,8 +139,8 @@ class _ReciepsState extends State<Recieps> {
                     scrollDirection: Axis.horizontal,
                     child: Row(
                       children: List.generate(
-                        categories.length,
-                            (index) => option(categories[index], index),
+                        displayedCategories.length,
+                            (index) => option(displayedCategories[index], index),
                       ),
                     ),
                   ),
@@ -146,7 +157,6 @@ class _ReciepsState extends State<Recieps> {
               ),
               itemCount: displayedIngredients.length,
               itemBuilder: (context, index) {
-                print(displayedIngredients);
                 return buildIngredient(displayedIngredients[index], index);
               },
             ),
@@ -156,7 +166,8 @@ class _ReciepsState extends State<Recieps> {
     );
   }
 
-  Widget option(String categoryName, int index) {
+  Widget option(CategoriesFood category, int index) {
+
     return GestureDetector(
       onTap: () {
         if (optionSelected[index]) {
@@ -167,7 +178,8 @@ class _ReciepsState extends State<Recieps> {
             optionSelected[i] = false;
           }
           optionSelected[index] = true;
-          filterIngredientsByCategory(categoryName);
+          print(category.id);
+         filterIngredientsByCategory(category.id);
         }
 
         setState(() {});
@@ -182,7 +194,7 @@ class _ReciepsState extends State<Recieps> {
         padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         margin: EdgeInsets.symmetric(horizontal: 4),
         child: Text(
-          categoryName,
+          category.name,
           style: TextStyle(
             color: Colors.white,
             fontSize: 14,
@@ -193,8 +205,8 @@ class _ReciepsState extends State<Recieps> {
     );
   }
 
-  Widget buildIngredient(Ingredient ingredient, int index) {
-    print(ingredient.id);
+  Widget buildIngredient(IngredientRecieps ingredient, int index) {
+
     return InkWell(
       onTap: () {
         Navigator.push(
@@ -233,5 +245,9 @@ class _ReciepsState extends State<Recieps> {
       ),
     );
   }
+
+
 }
+
+
 

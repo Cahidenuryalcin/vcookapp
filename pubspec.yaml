@@ -47,6 +47,7 @@ dependencies:
   image: ^3.3.0
   flutter_tflite: ^1.0.1
   image_picker: ^0.8.9
+  flutter_pytorch: ^1.0.1
 
 
 
@@ -79,8 +80,7 @@ flutter:
     - assets/illustration.png
     - assets/images/
     - assets/icons/
-    - assets/model.tflite
-    - assets/labels.txt
+    - assets/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

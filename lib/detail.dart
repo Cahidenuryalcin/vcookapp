@@ -1,10 +1,9 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:vcook_app/camera.dart';
 import 'package:vcook_app/imagepicker.dart';
-import 'package:vcook_app/recieps.dart';
 import 'package:vcook_app/drawerside.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:vcook_app/service/food.dart'; // Burada 'path/to' kısmını uygun yola güncelleyin
+
 
 class DetailPage extends StatefulWidget {
   final int index;
@@ -18,10 +17,12 @@ class _DetailPageState extends State<DetailPage> {
   late DocumentSnapshot foodSnapshot;
   bool _isFoodSnapshotLoaded = false;
 
+
   @override
   void initState() {
     super.initState();
     fetchFoodDetails();
+
   }
 
   void fetchFoodDetails() async {
@@ -33,8 +34,13 @@ class _DetailPageState extends State<DetailPage> {
         foodSnapshot = querySnapshotFood.docs.first;
         _isFoodSnapshotLoaded = true;
       });
+
     }
   }
+
+
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -51,6 +57,8 @@ class _DetailPageState extends State<DetailPage> {
     String calorie = foodSnapshot['calorie'];
     String time = foodSnapshot['time'];
     String serving = foodSnapshot['service'];
+
+
 
     return Scaffold(
       appBar: AppBar(
@@ -93,25 +101,31 @@ class _DetailPageState extends State<DetailPage> {
                   ),
                   SizedBox(height: 16),
                   Text(
+                    "Malzemeler",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  // Malzemeleri listele
+                  SizedBox(height: 16),
+                  Text(
                     "Tarif",
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   Text(foodSnapshot['reciep']),
                   SizedBox(height: 16),
+
                   ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => CameraOn()),
-                      );
+                    onPressed: () async {
+                      // ben de yaptım butonu ile malzeme düşmesi
                     },
                     icon: Icon(Icons.photo_camera),
                     label: Text("Ben de Yaptım", style: TextStyle(fontSize: 16)),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
+                      backgroundColor: Colors.red,
                       minimumSize: Size(double.infinity, 50),
                     ),
                   ),
+
+
                   SizedBox(height: 16),
                   ElevatedButton.icon(
                     onPressed: () {
@@ -151,15 +165,7 @@ class _DetailPageState extends State<DetailPage> {
       ),
     );
   }
-}
-
-class Ingredient {
-  int id;
-  String name;
-  String imagePath;
-  String category;
-
-
-  Ingredient({required this.name, required this.imagePath, required this.category, required this.id});
 
 }
+
+

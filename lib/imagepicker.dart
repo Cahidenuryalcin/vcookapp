@@ -21,8 +21,8 @@ class _ImagePickerPageState extends State<ImagePickerPage> {
 
   Future loadModel() async {
     var result = await Tflite.loadModel(
-      model: "assets/model.tflite",
-      labels: "assets/labels.txt", // Modelinizin etiket dosyası
+      model: "assets/ssd_mobilenet.tflite",
+      labels: "assets/ssd_mobilenet.txt", // Modelinizin etiket dosyası
     );
     print("Model yüklendi: $result");
   }
@@ -63,7 +63,7 @@ class _ImagePickerPageState extends State<ImagePickerPage> {
 
   bool isFood(String label) {
     // Burada yemekle ilgili etiketleri kontrol edin
-    return ["icli_kofte", "lahmacun", "tulumba", "yemekler"].contains(label.toLowerCase());
+    return ["apple", "banana"].contains(label.toLowerCase());
   }
 
   @override

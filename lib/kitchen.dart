@@ -1,10 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:flutter_pytorch/flutter_pytorch.dart';
 import 'package:vcook_app/service/food.dart';
 import 'package:vcook_app/user.dart';
 import 'package:vcook_app/drawerside.dart';
+
 
 class Kitchen extends StatefulWidget {
   @override
@@ -13,15 +12,30 @@ class Kitchen extends StatefulWidget {
 
 class _KitchenState extends State<Kitchen> {
   List<bool> optionSelected = [];
-  List<CategoriesIngredients> categories = [];
+  List<CategoriesIngredients> categoriesingredients = [];
+  List<CategoriesIngredients> displayedCategories = [];
+
+  List<UserIngredients> useringredients = [];
+  List<UserIngredients> displayedIngredients = [];
+
+
+
+
+  List<bool> dropdownSelected = [];
+  List<String> dropdownOptions = ['Seçenek 1', 'Seçenek 2', 'Seçenek 3'];
+  String? dropdownValue;
+
+
+
 
   @override
   void initState() {
     super.initState();
-    fetchCategories();
+    fetchUserIngredientsAndCategories();
   }
 
-  void fetchCategories() async {
+
+  void fetchUserIngredientsAndCategories() async {
     var ingredientsCategoryCollection = FirebaseFirestore.instance.collection('categoriesingredients');
     try {
       var querySnapshotCategory = await ingredientsCategoryCollection.get();
@@ -31,13 +45,18 @@ class _KitchenState extends State<Kitchen> {
       )).toList();
 
       setState(() {
-        categories = fetchedCategories;
-        optionSelected = List.generate(categories.length, (index) => false);
+        categoriesingredients = fetchedCategories;
+        optionSelected = List.generate(categoriesingredients.length, (index) => false);
       });
     } catch (e) {
       print('Error fetching categories: $e');
     }
+
+
   }
+
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -62,12 +81,95 @@ class _KitchenState extends State<Kitchen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
+        floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Yeni malzeme ekleme işlevi
+      showDialog(
+        context: context,
+        builder: (context) {
+          return StatefulBuilder(
+            builder: (BuildContext context, StateSetter setState) {
+              return AlertDialog(
+                title: Row(
+                  children: [
+                    Icon(Icons.add_box, color: Colors.green),
+                    SizedBox(width: 8),
+                    Text('Malzeme Ekle', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    DropdownButton<String>(
+                      value: dropdownValue,
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          dropdownValue = newValue;
+                        });
+                      },
+                      items: dropdownOptions.map((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
+                      style: TextStyle(color: Colors.black),
+                      icon: Icon(Icons.arrow_drop_down, color: Colors.black),
+                      elevation: 2,
+                      isExpanded: true,
+                      underline: Container(
+                        height: 1,
+                        color: Colors.grey,
+                      ),
+                      dropdownColor: Colors.white,
+                    ),
+                    SizedBox(height: 16),
+                    TextFormField(
+                      decoration: InputDecoration(
+                        labelText: 'Adet',
+                        labelStyle: TextStyle(color: Colors.green),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.green),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.grey),
+                        ),
+                      ),
+                      keyboardType: TextInputType.number,
+                  //    controller: adetController,
+                    ),
+                  ],
+                ),
+                actions: <Widget>[
+                  MaterialButton(
+                    child: Text('İptal'),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                  MaterialButton(
+                    child: Text('Kaydet'),
+                    onPressed: () {
+                      // Burada kaydetme işlemini yapabilirsiniz.
+                      String selectedOption = dropdownValue ?? '';
+                   //   int adet = int.tryParse(adetController.text) ?? 0;
+                      // Yapılacak işlemleri ekleyin
+                      // Ardından pencereyi kapatmak için Navigator.of(context).pop() kullanabilirsiniz.
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ],
+              );
+            },
+          );
         },
-        child: Icon(Icons.add),
+      );
+
+        },
+        child: const Icon(Icons.add),
+
+        backgroundColor: Colors.green,
       ),
+
       body: SingleChildScrollView(
         physics: BouncingScrollPhysics(),
         child: Column(
@@ -109,8 +211,8 @@ class _KitchenState extends State<Kitchen> {
                     scrollDirection: Axis.horizontal,
                     child: Row(
                       children: List.generate(
-                        categories.length,
-                            (index) => option(categories[index], index),
+                        categoriesingredients.length,
+                            (index) => option(categoriesingredients[index], index),
                       ),
                     ),
                   ),
@@ -125,7 +227,7 @@ class _KitchenState extends State<Kitchen> {
                 crossAxisCount: 2,
                 childAspectRatio: 0.8,
               ),
-              itemCount: categories.length,
+              itemCount: categoriesingredients.length,
               itemBuilder: (context, index) {
                // return buildIngredient(Ingredient[index], index);
               },
@@ -166,73 +268,9 @@ class _KitchenState extends State<Kitchen> {
     );
   }
 
-  Widget buildIngredient(Ingredient ingredient, int index) {
-    return Card(
-      margin: EdgeInsets.all(8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            child: Center(child: Text(ingredient.name)),
-          ),
-          Text("${ingredient.quantity} Gram"),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              IconButton(
-                icon: Icon(Icons.delete),
-                onPressed: () {
-                  // Silme işlemi
-                },
-              ),
-              IconButton(
-                icon: Icon(Icons.edit),
-                onPressed: () {
-                  // Düzenleme işlemi
-                  _showEditDialog(ingredient, context);
-                },
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 
-  void _showEditDialog(Ingredient ingredient, BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Miktar Düzenle'),
-          content: TextField(
-            controller: TextEditingController()..text = ingredient.quantity.toString(),
-            decoration: InputDecoration(hintText: "Yeni miktar girin"),
-            keyboardType: TextInputType.number,
-          ),
-          actions: <Widget>[
-            MaterialButton(
-              child: Text('İptal'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            MaterialButton(
-              child: Text('Kaydet'),
-              onPressed: () {
-                // Kaydetme işlemi
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
+
+
 }
 
-class Ingredient {
-  String name;
-  int quantity;
 
-  Ingredient({required this.name, required this.quantity});
-}

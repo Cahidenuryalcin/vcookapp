@@ -20,17 +20,19 @@ class FoodIngredients {
   final String amount;
   final int foodId;
   final int ingredientsId;
+  final List<Ingredients> ingredients;
 
-  FoodIngredients({required this.amount, required this.foodId, required this.ingredientsId});
+  FoodIngredients({required this.amount, required this.foodId, required this.ingredientsId, required this.ingredients});
 }
 
 class Ingredients {
   final int id;
   final String name;
-  final int categorydId;
+  final int categoryId;
   final int typeId;
+  final String type;
 
-  Ingredients({required this.id, required this.name, required this.categorydId,required this.typeId});
+  Ingredients({required this.id, required this.name, required this.categoryId,required this.typeId, required this.type});
 }
 class Type {
   final int id;
@@ -39,6 +41,7 @@ class Type {
   Type({required this.id, required this.name});
 
 }
+
 
 
 class IngredientRecieps {
@@ -99,6 +102,7 @@ class FoodService {
     }
   }
 
+
   // Function to fetch foods
   Future<List<IngredientRecieps>> fetchFoods(Map<String, String> categoriesMap) async {
     var foodCollection = FirebaseFirestore.instance.collection('food');
@@ -122,6 +126,29 @@ class FoodService {
     }
   }
 
+  // Function to fetch user ingredients
+  Future<List<UserIngredients>> fetchUserIngredients(int userId) async {
+    var userIngredientsCollection = FirebaseFirestore.instance.collection('useringredients');
+    try {
+      var querySnapshotUserIngredients = await userIngredientsCollection.where('userId', isEqualTo: userId).get();
+      return querySnapshotUserIngredients.docs.map((item) => UserIngredients(
+        id: item['id'],
+        userId: item['userId'],
+        ingredientsId: item['ingredientsId'],
+        amount: item['amount'],
+      )).toList();
+    } catch (e) {
+      // Handle errors or exceptions
+      print('Error fetching user ingredients: $e');
+      return [];
+    }
+  }
+
+  // Function to filter user ingredients by category
+  List<UserIngredients> filterUserIngredientsByCategory(int categoryId, List<UserIngredients> allUserIngredients) {
+    return allUserIngredients.where((ingredient) => ingredient.ingredientsId == categoryId).toList();
+  }
+
 
   // Function to filter foods by category
   List<IngredientRecieps> filterFoodsByCategory(int categoryId, List<IngredientRecieps> allFoods) {
@@ -129,6 +156,42 @@ class FoodService {
   }
 
 
+  // make list of ingredients by food id
+  Future<List<FoodIngredients>> fetchIngredientsByFoodId(int foodId) async {
+    var foodIngredientsCollection = FirebaseFirestore.instance.collection('foodingredients');
+    try {
+      var querySnapshotFoodIngredients = await foodIngredientsCollection.where('foodId', isEqualTo: foodId).get();
+      return querySnapshotFoodIngredients.docs.map((item) => FoodIngredients(
+        amount: item['amount'],
+        foodId: item['foodId'],
+        ingredientsId: item['ingredientsId'],
+        ingredients: [],
+      )).toList();
+    } catch (e) {
+      // Handle errors or exceptions
+      print('Error fetching ingredients: $e');
+      return [];
+    }
+  }
+
+  // get ingredients by id
+  Future<List<Ingredients>> fetchIngredientsById(int ingredientsId) async {
+    var ingredientsCollection = FirebaseFirestore.instance.collection('ingredients');
+    try {
+      var querySnapshotIngredients = await ingredientsCollection.where('id', isEqualTo: ingredientsId).get();
+      return querySnapshotIngredients.docs.map((item) => Ingredients(
+        id: item['id'],
+        name: item['name'],
+        categoryId: item['categoryId'],
+        type: item['type'],
+        typeId: item['typeId'],
+      )).toList();
+    } catch (e) {
+      // Handle errors or exceptions
+      print('Error fetching ingredients: $e');
+      return [];
+    }
+  }
 
 
 }

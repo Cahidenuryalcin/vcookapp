@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:vcook_app/imagepicker.dart';
 import 'package:vcook_app/drawerside.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
+import 'package:vcook_app/service/food.dart';
 
 class DetailPage extends StatefulWidget {
   final int index;
@@ -13,34 +13,63 @@ class DetailPage extends StatefulWidget {
   @override
   _DetailPageState createState() => _DetailPageState();
 }
+
 class _DetailPageState extends State<DetailPage> {
   late DocumentSnapshot foodSnapshot;
   bool _isFoodSnapshotLoaded = false;
+
+  List<FoodIngredients> foodIngredients = [];
 
 
   @override
   void initState() {
     super.initState();
     fetchFoodDetails();
-
   }
 
   void fetchFoodDetails() async {
     var foodCollection = FirebaseFirestore.instance.collection('food');
+    var foodIngredientsCollection =
+        FirebaseFirestore.instance.collection('foodingredients');
     var querySnapshotFood =
-    await foodCollection.where('id', isEqualTo: widget.index).get();
+        await foodCollection.where('id', isEqualTo: widget.index).get();
+
+    // get ingredients by id and put in list
+    var querySnapshotFoodIngredients = await foodIngredientsCollection
+        .where('foodId', isEqualTo: widget.index)
+        .get();
+
+    // get ingredients by id and put in list
+    for (var item in querySnapshotFoodIngredients.docs) {
+      var ingredientsCollection =
+          FirebaseFirestore.instance.collection('ingredients');
+      var querySnapshotIngredients =
+          await ingredientsCollection.where('id', isEqualTo: item['ingredientsId']).get();
+      var ingredients = querySnapshotIngredients.docs.map((item) => Ingredients(
+        id: item['id'],
+        name: item['name'],
+        categoryId: item['categoryId'],
+        typeId: item['typeId'],
+        type: item['type'],
+      )).toList();
+      foodIngredients.add(FoodIngredients(
+        amount: item['amount'],
+        foodId: item['foodId'],
+        ingredientsId: item['ingredientsId'],
+        ingredients: ingredients,
+      ));
+    }
+    
+    
+
     if (querySnapshotFood.docs.isNotEmpty) {
       setState(() {
         foodSnapshot = querySnapshotFood.docs.first;
+
         _isFoodSnapshotLoaded = true;
       });
-
     }
   }
-
-
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -57,8 +86,6 @@ class _DetailPageState extends State<DetailPage> {
     String calorie = foodSnapshot['calorie'];
     String time = foodSnapshot['time'];
     String serving = foodSnapshot['service'];
-
-
 
     return Scaffold(
       appBar: AppBar(
@@ -104,7 +131,30 @@ class _DetailPageState extends State<DetailPage> {
                     "Malzemeler",
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
-                  // Malzemeleri listele
+                  ListView(
+                    shrinkWrap: true,
+                    physics: NeverScrollableScrollPhysics(),
+                    children: List.generate(
+                      foodIngredients.length,
+                          (index) => Row(
+                        children: [
+                          Text(
+                            '•',
+                            style: TextStyle(
+                              fontSize: 20, // Madde işaretini burada büyütebilirsiniz
+                              fontWeight: FontWeight.bold, // İsteğe bağlı olarak kalın yapabilirsiniz
+                            ),
+                          ),
+                          SizedBox(width: 5), // Madde işareti ile metin arasında boşluk eklemek için
+                          Text(
+                            '${foodIngredients[index].amount} ${foodIngredients[index].ingredients.first.type} ${foodIngredients[index].ingredients.first.name}',
+                            style: TextStyle(fontSize: 16),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
                   SizedBox(height: 16),
                   Text(
                     "Tarif",
@@ -112,32 +162,36 @@ class _DetailPageState extends State<DetailPage> {
                   ),
                   Text(foodSnapshot['reciep']),
                   SizedBox(height: 16),
-
                   ElevatedButton.icon(
-                    onPressed: () async {
-                      // ben de yaptım butonu ile malzeme düşmesi
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => ImagePickerPage()),
+                      );
                     },
                     icon: Icon(Icons.photo_camera),
-                    label: Text("Ben de Yaptım", style: TextStyle(fontSize: 16)),
+                    label:
+                        Text("Ben de Yaptım", style: TextStyle(fontSize: 16)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,
                       minimumSize: Size(double.infinity, 50),
                     ),
                   ),
-
-
                   SizedBox(height: 16),
                   ElevatedButton.icon(
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => ImagePickerPage()),
+                        MaterialPageRoute(
+                            builder: (context) => ImagePickerPage()),
                       );
                     },
                     icon: Icon(Icons.photo_camera),
-                    label: Text("Fotoğraf Yükle", style: TextStyle(fontSize: 16)),
+                    label: Text("Ben de Yaptım Foto",
+                        style: TextStyle(fontSize: 16)),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
+                      backgroundColor: Colors.green,
                       minimumSize: Size(double.infinity, 50),
                     ),
                   ),
@@ -165,7 +219,4 @@ class _DetailPageState extends State<DetailPage> {
       ),
     );
   }
-
 }
-
-

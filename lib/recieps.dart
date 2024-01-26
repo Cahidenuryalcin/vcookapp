@@ -13,18 +13,20 @@ class Recieps extends StatefulWidget {
 
 class _ReciepsState extends State<Recieps> {
   List<bool> optionSelected = [];
+
   List<CategoriesFood> categoriesfood = [];
-  List<IngredientRecieps> ingredients = [];
-  List<IngredientRecieps> displayedIngredients = [];
   List<CategoriesFood> displayedCategories = [];
+
+  List<IngredientRecieps> ingredientsfood = [];
+  List<IngredientRecieps> displayedIngredients = [];
 
   @override
   void initState() {
     super.initState();
-    fetchCategoriesAndIngredients();
+    fetchFoodIngredientsAndCategories();
   }
 
-  void fetchCategoriesAndIngredients() async {
+  void fetchFoodIngredientsAndCategories() async {
     var categoryCollection = FirebaseFirestore.instance.collection('categoriesfood');
     var querySnapshotCategory = await categoryCollection.get();
     List<CategoriesFood> tempCategories = [];
@@ -52,8 +54,8 @@ class _ReciepsState extends State<Recieps> {
 
     setState(() {
       categoriesfood = tempCategories;
-      ingredients = tempIngredients;
-      displayedIngredients = List.from(ingredients);
+      ingredientsfood = tempIngredients;
+      displayedIngredients = List.from(ingredientsfood);
       displayedCategories = List.from(categoriesfood);
       optionSelected = List.generate(categoriesfood.length, (index) => false);
     });
@@ -61,7 +63,7 @@ class _ReciepsState extends State<Recieps> {
 
   void filterIngredientsByCategory(categoryId) {
 print(categoryId);
-    var filteredIngredients = ingredients.where((ingredient) => ingredient.categoryId == categoryId).toList();
+    var filteredIngredients = ingredientsfood.where((ingredient) => ingredient.categoryId == categoryId).toList();
 
     setState(() {
       displayedIngredients = filteredIngredients;
@@ -71,7 +73,7 @@ print(categoryId);
 
   void resetFilters() {
     setState(() {
-      displayedIngredients = List.from(ingredients);
+      displayedIngredients = List.from(ingredientsfood);
       optionSelected = List.generate(categoriesfood.length, (index) => false);
     });
   }

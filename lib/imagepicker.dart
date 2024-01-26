@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_tflite/flutter_tflite.dart';
 import 'package:image_picker/image_picker.dart';
 
-
 class ImagePickerPage extends StatefulWidget {
   @override
   _ImagePickerPageState createState() => _ImagePickerPageState();
@@ -22,7 +21,7 @@ class _ImagePickerPageState extends State<ImagePickerPage> {
   Future loadModel() async {
     var result = await Tflite.loadModel(
       model: "assets/ssd_mobilenet.tflite",
-      labels: "assets/ssd_mobilenet.txt", // Modelinizin etiket dosyası
+      labels: "assets/ssd_mobilenet.txt",
     );
     print("Model yüklendi: $result");
   }
@@ -30,9 +29,6 @@ class _ImagePickerPageState extends State<ImagePickerPage> {
   Future getImage() async {
     final ImagePicker picker = ImagePicker();
     final XFile? image = await picker.pickImage(source: ImageSource.gallery);
-
-    print("Resim seçildi: ${image?.path}");
-
 
     if (image != null) {
       recognizeImage(File(image.path));
@@ -46,23 +42,25 @@ class _ImagePickerPageState extends State<ImagePickerPage> {
   Future recognizeImage(File image) async {
     var recognitions = await Tflite.runModelOnImage(
       path: image.path,
-      numResults: 5, // Çıktıda gösterilecek maksimum sonuç sayısı
-      threshold: 0.05, // Sonuçlar için minimum güven eşiği
-      imageMean: 127.5, // İşlenen resimler için ortalaması
-      imageStd: 127.5, // İşlenen resimler için standart sapması
+      numResults: 5,
+      threshold: 0.05,
+      imageMean: 127.5,
+      imageStd: 127.5,
     );
 
-    print("Tanıma sonuçları: $recognitions");
-
-    bool isFoodDetected = recognitions!.any((res) => isFood(res["label"]));
-    setState(() {
-      _foodMessage = isFoodDetected ? "Yemek tanındı!" : "Yemek tanınmadı.";
-    });
-    print("Yemek tanındı mı: $isFoodDetected");
+    if (recognitions != null) {
+      bool isFoodDetected = recognitions.any((res) => isFood(res["label"]));
+      setState(() {
+        _foodMessage = isFoodDetected ? "Yemek tanındı!" : "Yemek tanınmadı.";
+      });
+    } else {
+      setState(() {
+        _foodMessage = "Tanınan bir nesne bulunamadı.";
+      });
+    }
   }
 
   bool isFood(String label) {
-    // Burada yemekle ilgili etiketleri kontrol edin
     return ["apple", "banana"].contains(label.toLowerCase());
   }
 
@@ -78,7 +76,7 @@ class _ImagePickerPageState extends State<ImagePickerPage> {
       appBar: AppBar(
         title: Text('Galeriden Fotoğraf Seç ve Tanı'),
       ),
-      body: SingleChildScrollView( // Ekranı kaydırılabilir yapmak için
+      body: SingleChildScrollView(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -88,7 +86,7 @@ class _ImagePickerPageState extends State<ImagePickerPage> {
                 : Column(
               children: <Widget>[
                 Image.file(File(_image!.path)),
-                SizedBox(height: 20), // Fotoğraf ve metin arasında boşluk
+                SizedBox(height: 20),
                 Text(
                   _foodMessage,
                   style: TextStyle(
@@ -110,5 +108,3 @@ class _ImagePickerPageState extends State<ImagePickerPage> {
     );
   }
 }
-
-

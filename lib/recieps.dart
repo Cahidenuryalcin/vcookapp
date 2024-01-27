@@ -62,7 +62,7 @@ class _ReciepsState extends State<Recieps> {
   }
 
   void filterIngredientsByCategory(categoryId) {
-print(categoryId);
+    print(categoryId);
     var filteredIngredients = ingredientsfood.where((ingredient) => ingredient.categoryId == categoryId).toList();
 
     setState(() {
@@ -250,6 +250,3 @@ print(categoryId);
 
 
 }
-
-
-

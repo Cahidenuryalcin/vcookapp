@@ -57,12 +57,12 @@ class IngredientRecieps {
 
 
 class UserIngredients {
-  final int id;
+
   final int userId;
   final int ingredientsId;
   final String amount;
 
-  UserIngredients({required this.id, required this.userId, required this.ingredientsId, required this.amount});
+  UserIngredients({required this.userId, required this.ingredientsId, required this.amount});
 
 }
 
@@ -126,13 +126,12 @@ class FoodService {
     }
   }
 
-  // Function to fetch user ingredients
-  Future<List<UserIngredients>> fetchUserIngredients(int userId) async {
+  // if user is logged in, list of user ingredients
+  Future<List<UserIngredients>> fetchUserIngredientsByUserId(int userId) async {
     var userIngredientsCollection = FirebaseFirestore.instance.collection('useringredients');
     try {
       var querySnapshotUserIngredients = await userIngredientsCollection.where('userId', isEqualTo: userId).get();
       return querySnapshotUserIngredients.docs.map((item) => UserIngredients(
-        id: item['id'],
         userId: item['userId'],
         ingredientsId: item['ingredientsId'],
         amount: item['amount'],
@@ -143,6 +142,8 @@ class FoodService {
       return [];
     }
   }
+
+
 
   // Function to filter user ingredients by category
   List<UserIngredients> filterUserIngredientsByCategory(int categoryId, List<UserIngredients> allUserIngredients) {
@@ -192,6 +193,8 @@ class FoodService {
       return [];
     }
   }
+
+
 
 
 }

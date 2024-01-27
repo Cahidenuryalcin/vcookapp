@@ -20,19 +20,16 @@ class _KitchenState extends State<Kitchen> {
 
 
 
-
   List<bool> dropdownSelected = [];
   List<String> dropdownOptions = ['Seçenek 1', 'Seçenek 2', 'Seçenek 3'];
   String? dropdownValue;
-
-
-
 
   @override
   void initState() {
     super.initState();
     fetchUserIngredientsAndCategories();
   }
+
 
 
   void fetchUserIngredientsAndCategories() async {
@@ -53,7 +50,45 @@ class _KitchenState extends State<Kitchen> {
     }
 
 
+
+    var userIngredientsCollection = FirebaseFirestore.instance.collection('useringredients');
+    
+    
+    var querySnapshotUserIngredients = await userIngredientsCollection.where('userId', isEqualTo: 1).get();
+
+    List<UserIngredients> tempIngredients = [];
+    for (var useringredient in querySnapshotUserIngredients.docs) {
+      print( useringredient['userId']);
+      tempIngredients.add(UserIngredients(
+        userId: useringredient['userId'],
+        ingredientsId: useringredient['ingredientsId'],
+        amount: useringredient['amount'],
+      ));
+    }
+
+
+    setState(() {
+      useringredients = tempIngredients;
+      displayedIngredients = List.from(useringredients);
+    });
+
+
+
   }
+
+  Future<Map<String, String>> getIngredientById(int id) async {
+    var ingredientsCollection = FirebaseFirestore.instance.collection('ingredients');
+    var querySnapshotIngredients = await ingredientsCollection.where('id', isEqualTo: id).get();
+    if (querySnapshotIngredients.docs.isNotEmpty) {
+      var data = querySnapshotIngredients.docs.first.data();
+      return {
+        'name': data['name'] ?? 'Unknown',
+        'type': data['type'] ?? 'Unknown'
+      };
+    }
+    return {'name': 'Unknown', 'type': 'Unknown'};
+  }
+
 
 
 
@@ -81,88 +116,88 @@ class _KitchenState extends State<Kitchen> {
           ),
         ],
       ),
-        floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton(
         onPressed: () {
-      showDialog(
-        context: context,
-        builder: (context) {
-          return StatefulBuilder(
-            builder: (BuildContext context, StateSetter setState) {
-              return AlertDialog(
-                title: Row(
-                  children: [
-                    Icon(Icons.add_box, color: Colors.green),
-                    SizedBox(width: 8),
-                    Text('Malzeme Ekle', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  ],
-                ),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    DropdownButton<String>(
-                      value: dropdownValue,
-                      onChanged: (String? newValue) {
-                        setState(() {
-                          dropdownValue = newValue;
-                        });
-                      },
-                      items: dropdownOptions.map((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
-                      style: TextStyle(color: Colors.black),
-                      icon: Icon(Icons.arrow_drop_down, color: Colors.black),
-                      elevation: 2,
-                      isExpanded: true,
-                      underline: Container(
-                        height: 1,
-                        color: Colors.grey,
-                      ),
-                      dropdownColor: Colors.white,
+          showDialog(
+            context: context,
+            builder: (context) {
+              return StatefulBuilder(
+                builder: (BuildContext context, StateSetter setState) {
+                  return AlertDialog(
+                    title: Row(
+                      children: [
+                        Icon(Icons.add_box, color: Colors.green),
+                        SizedBox(width: 8),
+                        Text('Malzeme Ekle', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      ],
                     ),
-                    SizedBox(height: 16),
-                    TextFormField(
-                      decoration: InputDecoration(
-                        labelText: 'Adet',
-                        labelStyle: TextStyle(color: Colors.green),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.green),
+                    content: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        DropdownButton<String>(
+                          value: dropdownValue,
+                          onChanged: (String? newValue) {
+                            setState(() {
+                              dropdownValue = newValue;
+                            });
+                          },
+                          items: dropdownOptions.map((String value) {
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            );
+                          }).toList(),
+                          style: TextStyle(color: Colors.black),
+                          icon: Icon(Icons.arrow_drop_down, color: Colors.black),
+                          elevation: 2,
+                          isExpanded: true,
+                          underline: Container(
+                            height: 1,
+                            color: Colors.grey,
+                          ),
+                          dropdownColor: Colors.white,
                         ),
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.grey),
+                        SizedBox(height: 16),
+                        TextFormField(
+                          decoration: InputDecoration(
+                            labelText: 'Adet',
+                            labelStyle: TextStyle(color: Colors.green),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.green),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.grey),
+                            ),
+                          ),
+                          keyboardType: TextInputType.number,
+                          //    controller: adetController,
                         ),
-                      ),
-                      keyboardType: TextInputType.number,
-                  //    controller: adetController,
+                      ],
                     ),
-                  ],
-                ),
-                actions: <Widget>[
-                  MaterialButton(
-                    child: Text('İptal'),
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                  ),
-                  MaterialButton(
-                    child: Text('Kaydet'),
-                    onPressed: () {
-                      // Burada kaydetme işlemini yapabilirsiniz.
-                      String selectedOption = dropdownValue ?? '';
-                   //   int adet = int.tryParse(adetController.text) ?? 0;
-                      // Yapılacak işlemleri ekleyin
-                      // Ardından pencereyi kapatmak için Navigator.of(context).pop() kullanabilirsiniz.
-                      Navigator.of(context).pop();
-                    },
-                  ),
-                ],
+                    actions: <Widget>[
+                      MaterialButton(
+                        child: Text('İptal'),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                      MaterialButton(
+                        child: Text('Kaydet'),
+                        onPressed: () {
+                          // Burada kaydetme işlemini yapabilirsiniz.
+                          String selectedOption = dropdownValue ?? '';
+                          //   int adet = int.tryParse(adetController.text) ?? 0;
+                          // Yapılacak işlemleri ekleyin
+                          // Ardından pencereyi kapatmak için Navigator.of(context).pop() kullanabilirsiniz.
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                    ],
+                  );
+                },
               );
             },
           );
-        },
-      );
 
         },
         child: const Icon(Icons.add),
@@ -227,9 +262,9 @@ class _KitchenState extends State<Kitchen> {
                 crossAxisCount: 2,
                 childAspectRatio: 0.8,
               ),
-              itemCount: categoriesingredients.length,
+              itemCount: displayedIngredients.length,
               itemBuilder: (context, index) {
-               // return buildIngredient(Ingredient[index], index);
+                 return buildIngredient(displayedIngredients[index], index);
               },
             ),
           ],
@@ -268,9 +303,51 @@ class _KitchenState extends State<Kitchen> {
     );
   }
 
+  Widget buildIngredient(UserIngredients ingredient, int index) {
+    print(ingredient);
+    return InkWell(
+      child: Card(
+        margin: EdgeInsets.all(8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: EdgeInsets.all(8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    ingredient.amount,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  FutureBuilder<Map<String, String>>(
+                    future: getIngredientById(ingredient.ingredientsId),
+                    builder: (BuildContext context, AsyncSnapshot<Map<String, String>> snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return Text("Loading...");
+                      } else if (snapshot.hasError) {
+                        return Text("Error: ${snapshot.error}");
+                      } else {
+                        return Text(
+                          "${snapshot.data?['name'] ?? 'Unknown'} (${snapshot.data?['type'] ?? 'Unknown'})",
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        );
+                      }
+                    },
+                  ),
+
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
 
 
 }
-
 

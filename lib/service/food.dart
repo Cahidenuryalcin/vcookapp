@@ -42,6 +42,12 @@ class Type {
 
 }
 
+class Ingredientsname {
+  final String name;
+
+  Ingredientsname({required this.name});
+}
+
 
 
 class IngredientRecieps {
@@ -58,9 +64,9 @@ class IngredientRecieps {
 
 class UserIngredients {
 
-  final int userId;
+  final String userId;
   final int ingredientsId;
-  final String amount;
+  late final String amount;
 
   UserIngredients({required this.userId, required this.ingredientsId, required this.amount});
 
@@ -138,7 +144,7 @@ class FoodService {
       )).toList();
     } catch (e) {
       // Handle errors or exceptions
-      print('Error fetching user ingredients: $e');
+      print('Error fetching ingredients: $e');
       return [];
     }
   }
@@ -184,8 +190,8 @@ class FoodService {
         id: item['id'],
         name: item['name'],
         categoryId: item['categoryId'],
-        type: item['type'],
         typeId: item['typeId'],
+        type: item['type'],
       )).toList();
     } catch (e) {
       // Handle errors or exceptions
@@ -193,6 +199,8 @@ class FoodService {
       return [];
     }
   }
+
+
 
 
 

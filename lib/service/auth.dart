@@ -37,12 +37,17 @@ class Auth {
   }
 
   Future<void> registerUser({required String name, required String email, required String password}) async {
-    await userCollection.doc().set({
-      "name": name,
-      "email": email,
-      "password": password
-    });
+    String? userId = FirebaseAuth.instance.currentUser?.uid; // Firebase Auth'dan uid al
+    if (userId != null) {
+      await userCollection.doc(userId).set({ // Kullanıcının uid'sini kullanarak belge oluşturun
+        "id": userId,
+        "name": name,
+        "email": email,
+        "password": password
+      });
+    }
   }
+
 
 
   Future<void> signOut(BuildContext context) async {

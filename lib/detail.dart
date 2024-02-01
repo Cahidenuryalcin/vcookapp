@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:vcook_app/imagepicker.dart';
 import 'package:vcook_app/drawerside.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:vcook_app/kitchen.dart';
 import 'package:vcook_app/service/food.dart';
 
 class DetailPage extends StatefulWidget {
@@ -167,7 +168,7 @@ class _DetailPageState extends State<DetailPage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => ImagePickerPage()),
+                            builder: (context) => Kitchen()),
                       );
                     },
                     icon: Icon(Icons.photo_camera),

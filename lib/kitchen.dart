@@ -94,6 +94,7 @@ class _KitchenState extends State<Kitchen> {
     fetchIngredientNames();
   }
 
+
   void fetchUserIngredientsAndCategories() async {
     // fetch user ingredients
     if (uid != null) {
@@ -198,6 +199,8 @@ class _KitchenState extends State<Kitchen> {
       print('Error fetching ingredient names: $e');
     }
   }
+
+
 
 
   @override

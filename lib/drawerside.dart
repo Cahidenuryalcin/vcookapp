@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:vcook_app/recieps.dart';
+import 'package:vcook_app/service/auth.dart';
 import 'package:vcook_app/user.dart';
 import 'package:vcook_app/kitchen.dart';
 
@@ -105,7 +106,7 @@ class DrawerSide extends StatelessWidget {
                 icon: Icons.keyboard_backspace_outlined,
                 title: "Çıkış Yap",
                 onTap: (){
-                //tıklanıldığında çıkış yapılacak ve homepage() sayfasına yönlendirilecek
+                  Auth().signOut(context); // Çıkış yapma işlevini çağır//tıklanıldığında çıkış yapılacak ve homepage() sayfasına yönlendirilecek
               },
             ),
           ],

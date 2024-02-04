@@ -1,5 +1,8 @@
+import 'dart:math';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:vcook_app/imagepicker.dart';
 import 'package:vcook_app/drawerside.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -164,21 +167,48 @@ class _DetailPageState extends State<DetailPage> {
                   Text(foodSnapshot['reciep']),
                   SizedBox(height: 16),
                   ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => Kitchen()),
-                      );
+                    onPressed: () async {
+                      final userId = FirebaseAuth.instance.currentUser?.uid; // Aktif kullanıcının ID'sini al
+                      if (userId != null) {
+                        for (var ingredient in foodIngredients) {
+                          var userIngredientDoc = await FirebaseFirestore.instance
+                              .collection('useringredients')
+                              .where('userId', isEqualTo: userId)
+                              .where('ingredientsId', isEqualTo: ingredient.ingredientsId)
+                              .get();
+
+                          if (userIngredientDoc.docs.isNotEmpty) {
+                            var userIngredientData = userIngredientDoc.docs.first;
+                            var currentAmount = int.parse(userIngredientData['amount']);
+                            var requiredAmount = int.parse(ingredient.amount);
+
+                            var newAmount = max(currentAmount - requiredAmount, 0); // Yeni miktar, 0'dan küçükse 0 olacak
+
+                            // Kullanıcı malzemesinin miktarını güncelle
+                            await FirebaseFirestore.instance
+                                .collection('useringredients')
+                                .doc(userIngredientData.id)
+                                .update({'amount': newAmount.toString()});
+
+                            if (currentAmount < requiredAmount) {
+                              // Malzeme miktarı yetersizse ve sıfırlanmışsa kullanıcıyı bilgilendir
+                              Fluttertoast.showToast(msg: "${ingredient.ingredients.first.name} miktarı yetersiz. Malzeme miktarı sıfırlandı.");
+                            }
+                          }
+                        }
+                        // İşlem tamamlandı mesajı
+                        Fluttertoast.showToast(msg: "Malzemeler güncellendi ve tarif başarıyla yapıldı!");
+                      }
                     },
-                    icon: Icon(Icons.photo_camera),
-                    label:
-                        Text("Ben de Yaptım", style: TextStyle(fontSize: 16)),
+                    icon: Icon(Icons.check),
+                    label: Text("Ben de Yaptım", style: TextStyle(fontSize: 16)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,
                       minimumSize: Size(double.infinity, 50),
                     ),
                   ),
+
+
                   SizedBox(height: 16),
                   ElevatedButton.icon(
                     onPressed: () {
